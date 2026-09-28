@@ -1,19 +1,20 @@
 import os
 from flask import Flask, jsonify, request
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder="static")
 
-# In-memory storage (resets when the container restarts)
 todos = []
 next_id = 1
 
 
 @app.route("/")
-def home():
-    return jsonify(
-        message="Hello from Docker!",
-        endpoints=["GET /todos", "POST /todos", "DELETE /todos/<id>", "GET /health"],
-    )
+def index():
+    return app.send_static_file("index.html")
+
+
+@app.route("/api")
+def api_info():
+    return jsonify(message="Hello from Docker!")
 
 
 @app.route("/health")
