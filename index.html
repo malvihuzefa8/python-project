@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Docker To-Do</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f4f6f8; display: flex; justify-content: center; padding: 40px 16px; }
+    .card { background: #fff; width: 100%; max-width: 420px; padding: 24px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,.1); }
+    h1 { margin-top: 0; font-size: 22px; }
+    .row { display: flex; gap: 8px; }
+    input { flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 16px; }
+    button { padding: 10px 14px; border: none; border-radius: 6px; background: #2563eb; color: #fff; cursor: pointer; font-size: 16px; }
+    button:hover { background: #1d4ed8; }
+    ul { list-style: none; padding: 0; margin: 20px 0 0; }
+    li { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #eee; }
+    li button { background: #ef4444; padding: 6px 10px; font-size: 14px; }
+    li button:hover { background: #dc2626; }
+    .empty { color: #888; text-align: center; margin-top: 20px; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>🐳 Docker To-Do</h1>
+    <div class="row">
+      <input id="title" placeholder="Add a task..." />
+      <button onclick="addTodo()">Add</button>
+    </div>
+    <ul id="list"></ul>
+    <div id="empty" class="empty" style="display:none">No tasks yet</div>
+  </div>
+
+  <script>
+    async function loadTodos() {
+      const res = await fetch('/todos');
+      const todos = await res.json();
+      const list = document.getElementById('list');
+      list.innerHTML = '';
+      todos.forEach(t => {
+        const li = document.createElement('li');
+        const span = document.createElement('span');
+        span.textContent = t.title;
+        const btn = document.createElement('button');
+        btn.textContent = 'Delete';
+        btn.onclick = () => deleteTodo(t.id);
+        li.append(span, btn);
+        list.appendChild(li);
+      });
+      document.getElementById('empty').style.display = todos.length ? 'none' : 'block';
+    }
+
+    async function addTodo() {
+      const input = document.getElementById('title');
+      const title = input.value.trim();
+      if (!title) return;
+      await fetch('/todos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title })
+      });
+      input.value = '';
+      loadTodos();
+    }
+
+    async function deleteTodo(id) {
+      await fetch('/todos/' + id, { method: 'DELETE' });
+      loadTodos();
+    }
+
+    document.getElementById('title').addEventListener('keydown', e => {
+      if (e.key === 'Enter') addTodo();
+    });
+
+    loadTodos();
+  </script>
+</body>
+</html>
